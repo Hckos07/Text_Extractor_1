@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Tesseract from "tesseract.js";
 
 export default function App() {
   const [images, setImages] = useState([]);
@@ -15,51 +14,38 @@ export default function App() {
   };
 
   const extractData = async () => {
+    if (images.length === 0) return;
+
     setLoading(true);
     setDataPairs([]);
-    const newPairs = [];
 
-    for (const image of images) {
-      try {
-        const {
-          data: { text }
-        } = await Tesseract.recognize(image, "eng", {
-          tessedit_char_whitelist: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.@ ",
-        });
+    const formData = new FormData();
+    images.forEach((image) => {
+      formData.append("images", image);
+    });
 
-        const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    try {
+      const res = await fetch("https://textextractor1-production.up.railway.app/extract", {
+        method: "POST",
+        body: formData,
+      });
 
-        for (let i = 0; i < lines.length - 1; i++) {
-          const name = lines[i];
-          const numberLine = lines[i + 1];
-
-          // Match anything that looks like a phone number
-          const phoneMatch = numberLine.match(/\d{10,13}/);
-
-          if (phoneMatch) {
-            let rawNumber = phoneMatch[0];
-
-            // Take last 10 digits only (to remove country code like +91, 91, etc.)
-            const cleanNumber = rawNumber.slice(-10);
-
-            if (/^[6-9]\d{9}$/.test(cleanNumber)) {
-              newPairs.push({ name, number: cleanNumber });
-              i++; // Skip next line since it's already used
-            }
-          }
-        }
-
-      } catch (err) {
-        console.error("Error processing image:", err);
+      if (!res.ok) {
+        throw new Error("Failed to extract data");
       }
-    }
 
-    setDataPairs(newPairs);
-    setLoading(false);
+      const data = await res.json();
+      setDataPairs(data);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong while extracting data.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyAll = () => {
-    const text = dataPairs.map(d => `${d.name} - ${d.number}`).join("\n");
+    const text = dataPairs.map((d) => `${d.name} - ${d.number}`).join("\n");
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

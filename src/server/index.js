@@ -12,18 +12,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5500;
 
-// Middleware
-app.use(cors());
+// ✅ Middleware: Allow only your frontend domain
+app.use(cors({
+  origin: "https://textextractor1-1a20nbhpu-abhay-pals-projects-1bdaeb02.vercel.app"
+}));
 app.use(express.json());
 
-// Multer for file uploads
+// ✅ Multer config for file uploads
 const upload = multer({ dest: "uploads/" });
 
 app.get("/", (req, res) => {
   res.send("OCR backend is running.");
 });
 
-// OCR Endpoint
+// ✅ OCR Endpoint
 app.post("/extract", upload.array("images", 50), async (req, res) => {
   const files = req.files;
   const results = [];
@@ -46,11 +48,11 @@ app.post("/extract", upload.array("images", 50), async (req, res) => {
         const match = numberLine.match(/(?:\+91[-\s]?)?[789]\d{9}/);
         if (match) {
           results.push({ name, number: match[0] });
-          i++;
+          i++; // skip next line
         }
       }
 
-      fs.unlinkSync(imagePath); // Cleanup
+      fs.unlinkSync(imagePath); // ✅ Cleanup
     }
 
     res.json(results);
