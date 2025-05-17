@@ -20,32 +20,30 @@ export default function App() {
     setDataPairs([]);
 
     const formData = new FormData();
-    images.forEach((image) => {
-      formData.append("images", image);
-    });
+    images.forEach((img) => formData.append("images", img));
 
     try {
-      const res = await fetch("https://textextractor1-production.up.railway.app/extract", {
+      const response = await fetch("https://textextractor1-production.up.railway.app/extract", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error("Failed to extract data");
       }
 
-      const data = await res.json();
+      const data = await response.json();
       setDataPairs(data);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong while extracting data.");
+    } catch (err) {
+      console.error("Extraction failed:", err);
+      alert("There was an error extracting data. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const copyAll = () => {
-    const text = dataPairs.map((d) => `${d.name} - ${d.number}`).join("\n");
+    const text = dataPairs.map(d => `${d.name} - ${d.number}`).join("\n");
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

@@ -12,20 +12,25 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5500;
 
-// ✅ Middleware: Allow only your frontend domain
-app.use(cors({
-  origin: "https://textextractor1-1a20nbhpu-abhay-pals-projects-1bdaeb02.vercel.app"
-}));
+// Middleware
 app.use(express.json());
 
-// ✅ Multer config for file uploads
+// Allow specific origin (your Vercel frontend)
+app.use(cors({
+  origin: "https://textextractor1-git-main-abhay-pals-projects-1bdaeb02.vercel.app",
+  methods: ["POST", "GET"],
+  allowedHeaders: ["Content-Type"],
+}));
+
+// Multer for file uploads
 const upload = multer({ dest: "uploads/" });
 
+// Test route
 app.get("/", (req, res) => {
   res.send("OCR backend is running.");
 });
 
-// ✅ OCR Endpoint
+// OCR Endpoint
 app.post("/extract", upload.array("images", 50), async (req, res) => {
   const files = req.files;
   const results = [];
@@ -33,6 +38,7 @@ app.post("/extract", upload.array("images", 50), async (req, res) => {
   try {
     for (const file of files) {
       const imagePath = path.join(__dirname, file.path);
+
       const {
         data: { text },
       } = await Tesseract.recognize(imagePath, "eng", {
@@ -45,14 +51,14 @@ app.post("/extract", upload.array("images", 50), async (req, res) => {
       for (let i = 0; i < lines.length - 1; i++) {
         const name = lines[i];
         const numberLine = lines[i + 1];
-        const match = numberLine.match(/(?:\+91[-\s]?)?[789]\d{9}/);
+        const match = numberLine.match(/(?:\+91[-\s]?)?[6-9]\d{9}/);
         if (match) {
           results.push({ name, number: match[0] });
-          i++; // skip next line
+          i++;
         }
       }
 
-      fs.unlinkSync(imagePath); // ✅ Cleanup
+      fs.unlinkSync(imagePath); // Cleanup
     }
 
     res.json(results);
@@ -62,6 +68,7 @@ app.post("/extract", upload.array("images", 50), async (req, res) => {
   }
 });
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
