@@ -23,7 +23,7 @@ export default function App() {
     images.forEach((img) => formData.append("images", img));
 
     try {
-      const response = await fetch("https://textextractor1-production.up.railway.app/extract", {
+      const response = await fetch("textextractor1-production.up.railway.app", {
         method: "POST",
         body: formData,
       });

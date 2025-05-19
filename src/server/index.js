@@ -70,5 +70,5 @@ app.post("/extract", upload.array("images", 50), async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
