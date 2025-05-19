@@ -12,25 +12,24 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware
-app.use(express.json());
-
-// Allow specific origin (your Vercel frontend)
+// Enable CORS for your Vercel frontend
 app.use(cors({
   origin: "https://textextractor1-git-main-abhay-pals-projects-1bdaeb02.vercel.app",
-  methods: ["POST", "GET"],
+  methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
 }));
 
-// Multer for file uploads
-const upload = multer({ dest: "uploads/" });
+app.use(express.json());
+
+// Multer config (make sure /uploads exists)
+const upload = multer({ dest: path.join(__dirname, "uploads/") });
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("OCR backend is running.");
+  res.send("OCR backend is running successfully.");
 });
 
-// OCR Endpoint
+// OCR processing route
 app.post("/extract", upload.array("images", 50), async (req, res) => {
   const files = req.files;
   const results = [];
@@ -58,17 +57,17 @@ app.post("/extract", upload.array("images", 50), async (req, res) => {
         }
       }
 
-      fs.unlinkSync(imagePath); // Cleanup
+      fs.unlinkSync(imagePath); // Cleanup uploaded file
     }
 
     res.json(results);
   } catch (err) {
-    console.error("OCR error:", err);
+    console.error("OCR processing error:", err);
     res.status(500).json({ error: "Extraction failed" });
   }
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
